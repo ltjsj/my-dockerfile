@@ -1,18 +1,6 @@
 ### Lapis web This framework runs in a customized version of Nginx called OpenResty. This docker is built on the centos system, including lapis, luarocks, openresty,git etc
 
 
-## v1.0 feature 
-       #base centos 7
-       #lapis version is 1.7.0-1   
-       #openresty version is  1.15.8.3-1   
-       #luajit version  luajit-2.1    
-       #including  lunitx, ansicolors ,date, etlua, loadkit,mimetypes,pgmoon,lpeg,lua-resty-core ,elasticsearch,lua-cjson,luafilesystem,luasocket,lua-resty-mysql,lua-resty-kafka,
-	lua-resty-balancer ,lua-resty-jwt,luaossl,openssl etc.  wait for a sophisticated Lua client library   
-
-## The build script is as follows
-
-[The wrong image of docker after packaging is here](https://hub.docker.com/repository/docker/ltjsj/lapis-centos)
-
 
 ## How to build 
   
@@ -23,6 +11,12 @@
        # docker push ltjsj/lapis-centos:v1.0
 ```
 
+
+
+## The build script is as follows
+
+[The wrong image of docker after packaging is here](https://hub.docker.com/repository/docker/ltjsj/lapis-centos)
+ 
 
 ```js
  yum install -y yum-utils \
