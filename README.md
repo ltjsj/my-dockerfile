@@ -7,7 +7,7 @@
 ```js
        # git clone git@github.com:ltjsj/lapis-centos.git
        # cd lapis-centos && docker build -t ltjsj/lap-centos:tagname . 
-       # docker tag lapis-centos ltjsj/lapis-centos:v1.0 
+       # docker tag lapis-centos ltjsj/lapis-centos:tagname 
        # docker push ltjsj/lapis-centos:v1.0
 ```
 
