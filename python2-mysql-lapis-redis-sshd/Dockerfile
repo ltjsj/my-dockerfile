@@ -145,31 +145,6 @@ RUN pip install kafka-python==1.4.4 \
   && pip install wheel \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install Redis
-RUN yum -y install epel-release && \
-	yum -y install redis && \
-    yum clean all
-
-# Copy config redis
-ADD etc/redis.conf /etc/redis.conf
-
-# User
-USER root
-
-# Mountable directories
-VOLUME ["/var/lib/redis"]
-
-# Set the environment variables
-ENV HOME /var/lib/redis
-
-# Working directory
-WORKDIR /var/lib/redis
-
-CMD ["/usr/bin/redis-server", "/etc/redis.conf"]
-
-# Expose ports.
-EXPOSE 6379
-
 
 
 ###
@@ -300,7 +275,38 @@ RUN chmod +x /*.sh
 ENV AUTHORIZED_KEYS **None**
 
 EXPOSE 22
-CMD ["sh","/run.sh"]
+ENTRYPOINT ["/run.sh"]
+
+
+
+
+
+# Install Redis
+RUN yum -y install epel-release && \
+	yum -y install redis && \
+    yum clean all
+
+# Copy config redis
+ADD etc/redis.conf /etc/redis.conf
+
+# User
+USER root
+
+# Mountable directories
+VOLUME ["/var/lib/redis"]
+
+# Set the environment variables
+ENV HOME /var/lib/redis
+
+# Working directory
+WORKDIR /var/lib/redis
+
+ENTRYPOINT ["/usr/bin/redis-server", "/etc/redis.conf"]
+
+# Expose ports.
+EXPOSE 6379
+
+
 
 # Unused, present for parity with other Dockerfiles
 # This makes some tooling/testing easier, as specifying a build-arg
@@ -322,8 +328,11 @@ ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib
 # Copy nginx configuration files
 COPY ./scripts/nginx-reload.sh /root/nginx-reload.sh
 
-RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua  
-CMD ["sh","/root/nginx-reload.sh","&"]
+RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua
+
+ENTRYPOINT ["/root/nginx-reload.sh"]
+
+RUN ["chmod", "+x", "/root/nginx-reload.sh"]
 
 # Use SIGQUIT instead of default SIGTERM to cleanly drain requests
 # See https://github.com/openresty/docker-openresty/blob/master/README.md#tips--pitfalls
