@@ -1,8 +1,10 @@
 # Dockerfile - CentOS 7 - RPM version
 # https://github.com/openresty/docker-openresty
 
+ENV SUPERVISOR_VERSION=4.0.2
 ARG RESTY_IMAGE_BASE="centos"
 ARG RESTY_IMAGE_TAG="7"
+
 
 FROM ${RESTY_IMAGE_BASE}:${RESTY_IMAGE_TAG}
 
@@ -143,6 +145,7 @@ RUN pip install kafka-python==1.4.4 \
   && pip install query-string \
   && pip install urllib3 \
   && pip install wheel \
+  && pip install supervisor==${SUPERVISOR_VERSION}
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 
@@ -257,7 +260,7 @@ VOLUME /etc/mysql/docker-default.d
 ##
 ## Entrypoint
 ##
-ENTRYPOINT ["/docker-entrypoint.sh"]
+#ENTRYPOINT ["/docker-entrypoint.sh"]
 RUN ["chmod", "+x", "/docker-entrypoint.sh"]
 
 
@@ -275,7 +278,7 @@ RUN chmod +x /*.sh
 ENV AUTHORIZED_KEYS **None**
 
 EXPOSE 22
-ENTRYPOINT ["/run.sh"]
+#ENTRYPOINT ["/run.sh"]
 
 
 
@@ -301,7 +304,7 @@ ENV HOME /var/lib/redis
 # Working directory
 WORKDIR /var/lib/redis
 
-ENTRYPOINT ["/usr/bin/redis-server", "/etc/redis.conf"]
+#ENTRYPOINT ["/usr/bin/redis-server", "/etc/redis.conf"]
 
 # Expose ports.
 EXPOSE 6379
@@ -327,12 +330,15 @@ ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib
 
 # Copy nginx configuration files
 COPY ./scripts/nginx-reload.sh /root/nginx-reload.sh
+COPY ./scripts/startup.sh /startup.sh
 
 RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua
 
-ENTRYPOINT ["/root/nginx-reload.sh"]
+#ENTRYPOINT ["/root/nginx-reload.sh"]
 
 RUN ["chmod", "+x", "/root/nginx-reload.sh"]
+RUN ["chmod", "+x", "/startup.sh"]
+ENTRYPOINT ["/startup.sh"]
 
 # Use SIGQUIT instead of default SIGTERM to cleanly drain requests
 # See https://github.com/openresty/docker-openresty/blob/master/README.md#tips--pitfalls
