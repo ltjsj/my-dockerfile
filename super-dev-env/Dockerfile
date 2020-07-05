@@ -74,7 +74,7 @@ ENV LAPIS_OPENRESTY=/usr/local/openresty/nginx/sbin/nginx
 
 
 
-
+#----------------------lpais -----------------------------
 RUN yum install -y yum-utils \
     && yum-config-manager --add-repo ${RESTY_YUM_REPO} \
     && yum install -y \
@@ -156,15 +156,16 @@ RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua
 
 
 
+
+
+
+
+#---------------------python pip----------------------
 RUN yum -y install python-devel.x86_64
 RUN yum -y install python-pip
 RUN yum -y install mysql-devel
 RUN pip install --upgrade pip
 RUN pip install PyMySQL && pip install MySQL-python
-
-
-
-
 RUN pip install kafka-python==1.4.4 \
   && pip install redis==3.5.2 \
   && pip install protobuf==2.5.0 \
@@ -180,6 +181,117 @@ RUN pip install kafka-python==1.4.4 \
 
 ADD container-files /
 VOLUME ["/data"]
+
+#-----------------------mysql------------------------
+
+###
+### Install
+###
+RUN groupadd -g ${MY_GID} -r ${MY_GROUP} && \
+	adduser ${MY_USER} -u ${MY_UID} -M -s /sbin/nologin -g ${MY_GROUP}
+
+RUN \
+	yum -y install epel-release && \
+	rpm -ivh ${YUM_REPO_URL} && \
+	yum-config-manager --disable mysql55-community && \
+	yum-config-manager --disable mysql56-community && \
+	yum-config-manager --enable mysql57-community && \
+	yum-config-manager --disable mysql80-community && \
+	yum clean all
+
+RUN yum -y update && yum -y install \
+	mysql-community-server
+
+RUN \
+	yum -y autoremove && \
+	yum clean metadata && \
+	yum clean all && \
+	yum -y install hostname && \
+	yum clean all
+
+
+##
+## Configure
+##
+RUN \
+	rm -rf ${MYSQL_BASE_INCL} && \
+	rm -rf ${MYSQL_CUST_INCL1} && \
+	rm -rf ${MYSQL_CUST_INCL2} && \
+	rm -rf ${MYSQL_DEF_DAT} && \
+	rm -rf ${MYSQL_DEF_SCK} && \
+	rm -rf ${MYSQL_DEF_PID} && \
+	rm -rf ${MYSQL_DEF_LOG} && \
+	\
+	mkdir -p ${MYSQL_BASE_INCL} && \
+	mkdir -p ${MYSQL_CUST_INCL1} && \
+	mkdir -p ${MYSQL_CUST_INCL2} && \
+	mkdir -p ${MYSQL_DEF_DAT} && \
+	mkdir -p ${MYSQL_DEF_SCK} && \
+	mkdir -p ${MYSQL_DEF_PID} && \
+	mkdir -p ${MYSQL_DEF_LOG} && \
+	\
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_BASE_INCL} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_CUST_INCL1} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_CUST_INCL2} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_DAT} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_SCK} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_PID} && \
+	chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_LOG} && \
+	\
+	chmod 0775 ${MYSQL_BASE_INCL} && \
+	chmod 0775 ${MYSQL_CUST_INCL1} && \
+	chmod 0775 ${MYSQL_CUST_INCL2} && \
+	chmod 0775 ${MYSQL_DEF_DAT} && \
+	chmod 0775 ${MYSQL_DEF_SCK} && \
+	chmod 0775 ${MYSQL_DEF_PID} && \
+	chmod 0775 ${MYSQL_DEF_LOG}
+
+RUN \
+	echo "[client]"                                         > /etc/my.cnf && \
+	echo "socket = ${MYSQL_DEF_SCK}/mysqld.sock"           >> /etc/my.cnf && \
+	\
+	echo "[mysql]"                                         >> /etc/my.cnf && \
+	echo "socket = ${MYSQL_DEF_SCK}/mysqld.sock"           >> /etc/my.cnf && \
+	\
+	echo "[mysqld]"                                        >> /etc/my.cnf && \
+	echo "skip-host-cache"                                 >> /etc/my.cnf && \
+	echo "skip-name-resolve"                               >> /etc/my.cnf && \
+	echo "datadir = ${MYSQL_DEF_DAT}"                      >> /etc/my.cnf && \
+	echo "user = ${MY_USER}"                               >> /etc/my.cnf && \
+	echo "port = 3306"                                     >> /etc/my.cnf && \
+	echo "bind-address = 0.0.0.0"                          >> /etc/my.cnf && \
+	echo "socket = ${MYSQL_DEF_SCK}/mysqld.sock"           >> /etc/my.cnf && \
+	echo "pid-file = ${MYSQL_DEF_PID}/mysqld.pid"          >> /etc/my.cnf && \
+	echo "general_log_file = ${MYSQL_LOG_QUERY}"           >> /etc/my.cnf && \
+	echo "slow_query_log_file = ${MYSQL_LOG_SLOW}"         >> /etc/my.cnf && \
+	echo "log-error = ${MYSQL_LOG_ERROR}"                  >> /etc/my.cnf && \
+	echo "!includedir ${MYSQL_BASE_INCL}/"                 >> /etc/my.cnf && \
+	echo "!includedir ${MYSQL_CUST_INCL1}/"                >> /etc/my.cnf && \
+	echo "!includedir ${MYSQL_CUST_INCL2}/"                >> /etc/my.cnf
+
+##
+## Volumes
+##
+VOLUME /var/lib/mysql
+VOLUME /var/log/mysql
+VOLUME /var/sock/mysqld
+VOLUME /etc/mysql/conf.d
+VOLUME /etc/mysql/docker-default.d
+EXPOSE 3306
+RUN ["chmod", "+x", "/mysql/mysqld.sh"]
+
+
+
+#---------------------sshd 22----------------------
+RUN yum -y install openssh-server epel-release && \
+    yum -y install pwgen && \
+    ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key && \
+    ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key && \
+    ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
+RUN ["chmod", "+x", "/sshd/run.sh"]
+RUN ["chmod", "+x", "/sshd/set_root_pw.sh"]
+EXPOSE 22
+
 
 #--------------redis-----------------------
 RUN yum -y install epel-release
