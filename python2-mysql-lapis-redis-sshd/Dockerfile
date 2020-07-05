@@ -330,7 +330,7 @@ ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib
 
 # Copy nginx configuration files
 COPY ./scripts/nginx-reload.sh /root/nginx-reload.sh
-                                     COPY ./scripts/startup.sh /startup.sh
+COPY ./scripts/startup.sh /startup.sh
 
 RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua
 
