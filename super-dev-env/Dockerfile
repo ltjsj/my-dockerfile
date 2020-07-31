@@ -46,6 +46,8 @@ ENV LAPIS_OPENRESTY=/usr/local/openresty/nginx/sbin/nginx
 RUN yum install -y yum-utils \
     && yum-config-manager --add-repo ${RESTY_YUM_REPO} \
     && yum install -y \
+        dnsmasq \
+        bind-utils \
         epel-release \
         gettext \
 		gcc \
@@ -129,8 +131,12 @@ ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib
 RUN mkdir -p /data/www/program/ && cd /data/www/program && lapis new --lua
 
 
-
-
+#----------------------dnsmasq------------------------
+RUN mkdir -p /etc/default/
+RUN echo -e "ENABLED=1\nIGNORE_RESOLVCONF=yes" > /etc/default/dnsmasq
+#https://github.com/jpillora/webproc, need complie
+COPY ./webproc/webproc  /usr/local/bin/webproc
+RUN chmod +x /usr/local/bin/webproc
 
 
 
@@ -139,18 +145,18 @@ RUN yum -y install python-devel.x86_64
 RUN yum -y install python-pip
 RUN yum -y install mysql-devel
 RUN pip install --upgrade pip
-RUN pip install PyMySQL && pip install MySQL-python
-RUN pip install kafka-python==1.4.4 \
-  && pip install redis==3.5.2 \
-  && pip install protobuf==2.5.0 \
-  && pip install request \
-  && pip install requests \
-  && pip install openpyxl \
-  && pip install et-xmlfile \
-  && pip install query-string \
-  && pip install urllib3 \
-  && pip install wheel \
-  && pip install supervisor==${SUPERVISOR_VERSION} \
+RUN pip install MySQL-python
+RUN pip install kafka-python==1.4.4 -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install redis==3.5.2 -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install protobuf==2.5.0 -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install requests -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install openpyxl -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install et-xmlfile -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install query-string -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install urllib3 -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install redis-py-cluster==1.3.6 -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install wheel -i https://mirrors.aliyun.com/pypi/simple \
+  && pip install supervisor==${SUPERVISOR_VERSION} -i https://mirrors.aliyun.com/pypi/simple \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 ADD container-files /
