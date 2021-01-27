@@ -29,6 +29,7 @@ LABEL resty_rpm_arch="${RESTY_RPM_ARCH}"
 ENV CRYPTO_DIR=/usr/local/openresty/openssl/
 ENV OPENSSL_DIR=/usr/local/openresty/openssl/
 ENV LAPIS_OPENRESTY=/usr/local/openresty/nginx/sbin/nginx
+ENV LANG C.UTF-8
 
 RUN yum install -y yum-utils \
     && yum-config-manager --add-repo ${RESTY_YUM_REPO} \

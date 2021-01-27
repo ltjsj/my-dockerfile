@@ -2,6 +2,7 @@ FROM centos:7
 LABEL maintainer="83975256@qq.com"
 # webproc release settings
 ENV WEBPROC_VERSION 0.4.0
+ENV LANG C.UTF-8
 # fetch dnsmasq and webproc binary
 #configure dnsmasq
 RUN yum -y install dnsmasq

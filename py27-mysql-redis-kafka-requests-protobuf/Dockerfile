@@ -1,5 +1,6 @@
 FROM python:2.7.13
 ENV DEBIAN_FRONTEND noninteractive
+ENV LANG C.UTF-8
 RUN apt-get update \
   && apt-get install -y mysql-server --no-install-recommends \
   && apt-get clean \
